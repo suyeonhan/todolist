@@ -18,6 +18,8 @@ import com.todolist.suyeonh.todolist.MemocreateActivity;
 import com.todolist.suyeonh.todolist.R;
 import com.todolist.suyeonh.todolist.models.Memo;
 
+import org.greenrobot.eventbus.EventBus;
+
 import io.realm.OrderedRealmCollection;
 import io.realm.RealmRecyclerViewAdapter;
 
@@ -77,6 +79,14 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
 //                        ActivityOptionsCompat.makeSceneTransitionAnimation(mContext,
 //                                Pair.create(holder.imageView, "image")).toBundle());
 
+            }
+        });
+
+        holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                EventBus.getDefault().post(memo.getId());
+                return true;
             }
         });
     }

@@ -15,15 +15,15 @@ import android.transition.TransitionSet;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.widget.AdapterView;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.todolist.suyeonh.todolist.Adapter.MemoRecyclerAdapter;
 import com.todolist.suyeonh.todolist.models.Memo;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.util.List;
 
@@ -130,37 +130,51 @@ public class MemoActivity extends AppCompatActivity {
         inflater.inflate(R.menu.context_menu_memo, menu);
     }
 
-    @Override
-    public boolean onContextItemSelected(MenuItem item) {
-        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-        switch (item.getItemId()) {
-            case R.id.action_delete:
-                // 삭제를 누르면 확인을 받고 싶다
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setTitle("확인");
-                builder.setMessage("정말 삭제하시겠습니까");
-                builder.setIcon(R.mipmap.ic_launcher);
-                // 긍정 버튼
-                builder.setPositiveButton("삭제", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        deleteMemo(info.id);
-                    }
-                });
-                // 부정 버튼
-                builder.setNegativeButton("취소", null);
-                builder.show();
+//    @Override
+//    public boolean onContextItemSelected(MenuItem item) {
+//        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+//        switch (item.getItemId()) {
+//            case R.id.action_delete:
+//                // 삭제를 누르면 확인을 받고 싶다
+//                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//                builder.setTitle("확인");
+//                builder.setMessage("정말 삭제하시겠습니까");
+//                builder.setIcon(R.mipmap.ic_launcher);
+//                // 긍정 버튼
+//                builder.setPositiveButton("삭제", new DialogInterface.OnClickListener() {
+//                    @Override
+//                    public void onClick(DialogInterface dialog, int which) {
+//                        deleteMemo(info.id);
+//                    }
+//                });
+//                // 부정 버튼
+//                builder.setNegativeButton("취소", null);
+//                builder.show();
+//
+//                return true;
+//            case R.id.action_custom_dialog:
+//                showCustomDialog();
+//                return true;
+//            default:
+//                return super.onContextItemSelected(item);
+//        }
+//    }
 
-                return true;
-            case R.id.action_custom_dialog:
-                showCustomDialog();
-                return true;
-            default:
-                return super.onContextItemSelected(item);
-        }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        EventBus.getDefault().register(this);
     }
 
-    private void showCustomDialog() {
+    @Override
+    protected void onStop() {
+        super.onStop();
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Subscribe
+    public void showCustomDialog(final Long id) {
         View view = LayoutInflater.from(this).inflate(R.layout.dialog_login, null, false);
         final EditText idEditText = (EditText) view.findViewById(R.id.id_edit);
         final EditText passWordEditText = (EditText) view.findViewById(R.id.password_edit);
@@ -172,9 +186,7 @@ public class MemoActivity extends AppCompatActivity {
         builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                String id = idEditText.getText().toString();
-                String pass = passWordEditText.getText().toString();
-                Toast.makeText(MemoActivity.this, id + " " + pass, Toast.LENGTH_SHORT).show();
+                deleteMemo(id);
             }
         });
         builder.setNegativeButton("취소", null);
@@ -183,10 +195,8 @@ public class MemoActivity extends AppCompatActivity {
     }
 
     private void deleteMemo(long id) {
-//        int deleted = mMemoFacade.delete(id);
-//        if (deleted != 0) {
-//            mMemoList = mMemoFacade.getMemoList();
-//            mAdapter.swap(mMemoList);
-//        }
+        mRealm.beginTransaction();
+        mRealm.where(Memo.class).equalTo("id", id).findFirst().deleteFromRealm();
+        mRealm.commitTransaction();
     }
 }
