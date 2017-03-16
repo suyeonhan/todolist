@@ -71,6 +71,12 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
                 Intent intent = new Intent(mContext, MemocreateActivity.class);
                 intent.putExtra("memo", memo);
                 mContext.startActivity(intent);
+
+//                ActivityCompat.startActivity(mContext,
+//                        intent,
+//                        ActivityOptionsCompat.makeSceneTransitionAnimation(mContext,
+//                                Pair.create(holder.imageView, "image")).toBundle());
+
             }
         });
     }

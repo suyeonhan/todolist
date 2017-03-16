@@ -12,7 +12,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.transition.ChangeImageTransform;
 import android.transition.TransitionSet;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -25,9 +24,6 @@ import android.widget.Toast;
 
 import com.todolist.suyeonh.todolist.Adapter.MemoRecyclerAdapter;
 import com.todolist.suyeonh.todolist.models.Memo;
-
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
 import java.util.List;
 
@@ -101,7 +97,6 @@ public class MemoActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MemoActivity.this, MemocreateActivity.class);
-//                startActivityForResult(intent, REQUEST_CODE_NEW_MEMO);
                 startActivity(intent);
             }
         });
@@ -125,72 +120,6 @@ public class MemoActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         mRealm.close();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        EventBus.getDefault().register(this);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        EventBus.getDefault().unregister(this);
-    }
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK) {
-            final String title = data.getStringExtra("title");
-            final String imagePath = data.getStringExtra("image");
-
-            if (requestCode == REQUEST_CODE_NEW_MEMO) {
-                // 새 메모
-                mRealm.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        Memo memo = mRealm.createObject(Memo.class);
-                        memo.setTitle(title);
-                        memo.setImagePath(imagePath);
-                    }
-                });
-
-            } else if (requestCode == REQUEST_CODE_UPDATE_MEMO) {
-//                long id = data.getLongExtra("id", -1);
-//                int position = data.getIntExtra("position", -1);
-//                // 수정
-//                if (mMemoFacade.update(id, title, content, imagePath) > 0) {
-//                    mMemoList = mMemoFacade.getMemoList();
-//                }
-//                mAdapter.update(mMemoList, position);
-            }
-
-
-            Log.d(TAG, "onActivityResult: " + title + ", " );
-            Toast.makeText(this, "저장 되었습니다", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "취소 되었습니다", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Subscribe
-    public void onItemClick(MemoRecyclerAdapter.ItemClickEvent event) {
-        Memo memo = event.memo;
-
-
-        Intent intent = new Intent(this, MemocreateActivity.class);
-        intent.putExtra("memo", memo);
-        startActivity(intent);
-
-//        ActivityCompat.startActivityForResult(this, intent, REQUEST_CODE_UPDATE_MEMO,
-//                ActivityOptionsCompat.makeSceneTransitionAnimation(this,
-//                        Pair.create(event.imageView, "image"),
-//                        Pair.create(event.titleView, "title"),
-//                        Pair.create(event.contentView, "content")).toBundle());
     }
 
     @Override
