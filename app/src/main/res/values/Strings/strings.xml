@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">버킷리스트</string>
+
+    <string name="facebook_app_id">510926975701287</string>
+    <string name="fb_login_protocol_scheme">fb510926975701287</string>
+
+    <string name="action_create_list">새 그룹 만들기</string>
+    <string name="action_login">로그인</string>
+    <string name="action_logout">로그아웃</string>
+    <string name="action_share">공유하기</string>
+    <string name="action_delete">삭제하기</string>
+    <string name="action_show_document">Show Document</string>
+    <string name="action_update">변경하기</string>
+
+    <string name="button_guest_login">Login as guest (offline only) </string>
+
+    <string name="hint_new_list">그룹 이름</string>
+    <string name="hint_create_task">버킷리스트를 추가해주세요!</string>
+
+    <string name="title_activity_share">공유하기</string>
+    <string name="title_activity_image_view">ImageViewActivity</string>
+    <string name="title_activity_login">LoginActivity</string>
+    <string name="title_activity_list">ListActivity</string>
+
+    <string name="title_dialog_new_list">그룹 이름을 지정해주세요</string>
+    <string name="title_dialog_update">버킷리스트를 변경합니다</string>
+    <string name="title_dialog_delete">버킷리스트를 삭제하시겠습니까?</string>
+    <string name="title_dialog_delete_group">그룹을 삭제하시겠습니까?</string>
+</resources>
