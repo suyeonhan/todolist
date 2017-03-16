@@ -5,7 +5,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,6 +28,7 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
     private Realm mRealm;
 
     private long mId = -1;
+    private Memo mMemo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,12 +50,9 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
         if (getIntent() != null) {
             if (getIntent().hasExtra("memo")) {
                 // 보여주기
-
-//                mId = getIntent().getLongExtra("id", -1);
-
-                Memo memo = (Memo) getIntent().getParcelableExtra("memo");
-                mTitleEditText.setText(memo.getTitle());
-                mImagePath = memo.getImagePath();
+                mMemo = getIntent().getParcelableExtra("memo");
+                mTitleEditText.setText(mMemo.getTitle());
+                mImagePath = mMemo.getImagePath();
                 if (mImagePath != null) {
                     Glide.with(this).load(mImagePath).into(mImageView);
                 }
@@ -91,18 +88,26 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
     }
 
     private void save() {
-        mRealm.executeTransaction(new Realm.Transaction() {
-            @Override
-            public void execute(Realm realm) {
-                Memo memo = mRealm.createObject(Memo.class);
-                memo.setTitle(mTitleEditText.getText().toString());
-                memo.setImagePath(mImagePath);
-
-                Log.d("DB", "execute: " + mRealm.where(Memo.class).findAll().toString());
-                finish();
-            }
-        });
-
+        if (mMemo == null) {
+            // 신규
+            mRealm.executeTransaction(new Realm.Transaction() {
+                @Override
+                public void execute(Realm realm) {
+                    Memo memo = mRealm.createObject(Memo.class, Memo.nextId(realm));
+                    memo.setTitle(mTitleEditText.getText().toString());
+                    memo.setImagePath(mImagePath);
+                    finish();
+                }
+            });
+        } else {
+            // 수정
+            mRealm.beginTransaction();
+            Memo memo = mRealm.where(Memo.class).equalTo("id", mMemo.getId()).findFirst();
+            memo.setTitle(mTitleEditText.getText().toString());
+            memo.setImagePath(mImagePath);
+            mRealm.commitTransaction();
+            finish();
+        }
     }
 
     public void onImageClick2(View view) {

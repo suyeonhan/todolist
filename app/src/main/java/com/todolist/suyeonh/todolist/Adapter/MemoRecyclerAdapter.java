@@ -60,7 +60,6 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
 
         // 화면에 뿌리기
         holder.titleTextView.setText(memo.getTitle());
-        holder.contentTextView.setText(memo.getContent());
 
         if (memo.getImagePath() != null) {
             Glide.with(mContext).load(memo.getImagePath()).into(holder.imageView);
@@ -69,8 +68,6 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // MemoActivity#onItemClick
-//                EventBus.getDefault().post(new ItemClickEvent(memo));
                 Intent intent = new Intent(mContext, MemocreateActivity.class);
                 intent.putExtra("memo", memo);
                 mContext.startActivity(intent);
@@ -116,7 +113,6 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView titleTextView;
-        TextView contentTextView;
         ImageView imageView;
 
         public ViewHolder(View itemView) {
@@ -124,12 +120,10 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
 
             // 레이아웃 들고 오기
             TextView titleTextView = (TextView) itemView.findViewById(R.id.title_text);
-            TextView contentTextView = (TextView) itemView.findViewById(R.id.content_text);
             ImageView imageView = (ImageView) itemView.findViewById(R.id.image_view);
 
             // 뷰 홀더에 넣는다
             this.titleTextView = titleTextView;
-            this.contentTextView = contentTextView;
             this.imageView = imageView;
         }
     }

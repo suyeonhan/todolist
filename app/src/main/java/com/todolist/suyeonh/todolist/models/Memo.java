@@ -3,7 +3,9 @@ package com.todolist.suyeonh.todolist.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import io.realm.Realm;
 import io.realm.RealmObject;
+import io.realm.annotations.PrimaryKey;
 
 /**
  * Created by gkstn on 2017-03-09.
@@ -11,6 +13,7 @@ import io.realm.RealmObject;
 
 public class Memo extends RealmObject implements Parcelable {
 
+    @PrimaryKey
     private long id;
     private String title;
     private String content;
@@ -77,6 +80,17 @@ public class Memo extends RealmObject implements Parcelable {
         this.title = in.readString();
         this.content = in.readString();
         this.imagePath = in.readString();
+    }
+
+    public static long nextId(Realm realm) {
+        Number currentIdNum = realm.where(Memo.class).max("id");
+        int nextId;
+        if(currentIdNum == null) {
+            nextId = 1;
+        } else {
+            nextId = currentIdNum.intValue() + 1;
+        }
+        return nextId;
     }
 
     public static final Parcelable.Creator<Memo> CREATOR = new Parcelable.Creator<Memo>() {
