@@ -34,4 +34,5 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'org.greenrobot:eventbus:3.0.0'
     compile 'io.realm:android-adapters:2.0.0'
+    compile 'de.hdodenhof:circleimageview:2.1.0'
 }

@@ -7,7 +7,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.todolist.suyeonh.todolist.R;
-import com.todolist.suyeonh.todolist.models.Memo;
+import com.todolist.suyeonh.todolist.models.Group;
 
 import java.util.List;
 
@@ -16,10 +16,10 @@ import java.util.List;
  */
 
 public class MemoAdapter extends BaseAdapter {
-    private List<Memo> mData;
+    private List<Group> mData;
 
-    public void swap(List<Memo> newMemoList) {
-        mData = newMemoList;
+    public void swap(List<Group> newGroupList) {
+        mData = newGroupList;
         notifyDataSetChanged();
     }
 
@@ -63,10 +63,10 @@ public class MemoAdapter extends BaseAdapter {
         }
 
         //데이터
-        Memo memo = mData.get(position);
+        Group group = mData.get(position);
 
         //화면에 뿌리기
-        viewHolder.titleTextView.setText(memo.getTitle());
+        viewHolder.titleTextView.setText(group.getTitle());
 
         return convertView;
     }

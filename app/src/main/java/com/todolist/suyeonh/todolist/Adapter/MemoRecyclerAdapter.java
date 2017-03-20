@@ -16,7 +16,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.todolist.suyeonh.todolist.MemocreateActivity;
 import com.todolist.suyeonh.todolist.R;
-import com.todolist.suyeonh.todolist.models.Memo;
+import com.todolist.suyeonh.todolist.models.Group;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -27,11 +27,11 @@ import io.realm.RealmRecyclerViewAdapter;
  * Created by junsuk on 2017. 3. 6..
  */
 
-public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecyclerAdapter.ViewHolder> {
+public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Group, MemoRecyclerAdapter.ViewHolder> {
 
     private Context mContext;
 
-    public MemoRecyclerAdapter(Context context, @Nullable OrderedRealmCollection<Memo> data) {
+    public MemoRecyclerAdapter(Context context, @Nullable OrderedRealmCollection<Group> data) {
         super(data, true);
         setHasStableIds(true);
         mContext = context;
@@ -39,11 +39,11 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
 
     // EventBus 용 이벤트
     public static class ItemClickEvent {
-        public ItemClickEvent(Memo memo) {
-            this.memo = memo;
+        public ItemClickEvent(Group group) {
+            this.group = group;
         }
 
-        public Memo memo;
+        public Group group;
     }
 
 
@@ -58,20 +58,20 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         // 데이터
-        final Memo memo = getItem(position);
+        final Group group = getItem(position);
 
         // 화면에 뿌리기
-        holder.titleTextView.setText(memo.getTitle());
+        holder.titleTextView.setText(group.getTitle());
 
-        if (memo.getImagePath() != null) {
-            Glide.with(mContext).load(memo.getImagePath()).into(holder.imageView);
+        if (group.getImagePath() != null) {
+            Glide.with(mContext).load(group.getImagePath()).into(holder.imageView);
         }
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(mContext, MemocreateActivity.class);
-                intent.putExtra("memo", memo);
+                intent.putExtra("id", group.getId());
                 mContext.startActivity(intent);
 
 //                ActivityCompat.startActivity(mContext,
@@ -85,7 +85,7 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
         holder.itemView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                EventBus.getDefault().post(memo.getId());
+                EventBus.getDefault().post(group.getId());
                 return true;
             }
         });
@@ -111,17 +111,17 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
         return getItem(index).getId();
     }
 
-//    public void swap(List<Memo> memoList) {
+//    public void swap(List<Group> memoList) {
 //        mData = memoList;
 //        notifyDataSetChanged();
 //    }
 //
-//    public void insert(List<Memo> memoList) {
+//    public void insert(List<Group> memoList) {
 //        mData = memoList;
 //        notifyItemInserted(0);
 //    }
 //
-//    public void update(List<Memo> memoList, int position) {
+//    public void update(List<Group> memoList, int position) {
 //        mData = memoList;
 //        notifyItemChanged(position);
 //    }

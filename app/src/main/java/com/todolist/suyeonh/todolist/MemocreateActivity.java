@@ -14,7 +14,7 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.todolist.suyeonh.todolist.Utils.MyUtils;
-import com.todolist.suyeonh.todolist.models.Memo;
+import com.todolist.suyeonh.todolist.models.Group;
 
 import io.realm.Realm;
 
@@ -28,7 +28,7 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
     private Realm mRealm;
 
     private long mId = -1;
-    private Memo mMemo;
+    private Group mGroup;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,11 +48,14 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
         getSupportActionBar().setTitle("");
 
         if (getIntent() != null) {
-            if (getIntent().hasExtra("memo")) {
+            if (getIntent().hasExtra("id")) {
                 // 보여주기
-                mMemo = getIntent().getParcelableExtra("memo");
-                mTitleEditText.setText(mMemo.getTitle());
-                mImagePath = mMemo.getImagePath();
+                mId = getIntent().getLongExtra("id", -1);
+
+                mGroup = mRealm.where(Group.class).equalTo("id", mId).findFirst();
+
+                mTitleEditText.setText(mGroup.getTitle());
+                mImagePath = mGroup.getImagePath();
                 if (mImagePath != null) {
                     Glide.with(this).load(mImagePath).into(mImageView);
                 }
@@ -63,7 +66,7 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_memo2, menu);
+        inflater.inflate(R.menu.menu_memo, menu);
         return true;
     }
 
@@ -88,23 +91,23 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
     }
 
     private void save() {
-        if (mMemo == null) {
+        if (mGroup == null) {
             // 신규
             mRealm.executeTransaction(new Realm.Transaction() {
                 @Override
                 public void execute(Realm realm) {
-                    Memo memo = mRealm.createObject(Memo.class, Memo.nextId(realm));
-                    memo.setTitle(mTitleEditText.getText().toString());
-                    memo.setImagePath(mImagePath);
+                    Group group = mRealm.createObject(Group.class, Group.nextId(realm));
+                    group.setTitle(mTitleEditText.getText().toString());
+                    group.setImagePath(mImagePath);
                     finish();
                 }
             });
         } else {
             // 수정
             mRealm.beginTransaction();
-            Memo memo = mRealm.where(Memo.class).equalTo("id", mMemo.getId()).findFirst();
-            memo.setTitle(mTitleEditText.getText().toString());
-            memo.setImagePath(mImagePath);
+            Group group = mRealm.where(Group.class).equalTo("id", mGroup.getId()).findFirst();
+            group.setTitle(mTitleEditText.getText().toString());
+            group.setImagePath(mImagePath);
             mRealm.commitTransaction();
             finish();
         }

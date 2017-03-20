@@ -14,13 +14,15 @@ import android.transition.ChangeImageTransform;
 import android.transition.TransitionSet;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
 
 import com.todolist.suyeonh.todolist.Adapter.MemoRecyclerAdapter;
-import com.todolist.suyeonh.todolist.models.Memo;
+import com.todolist.suyeonh.todolist.models.Group;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -36,12 +38,11 @@ public class MemoActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_NEW_MEMO = 1000;
     public static final int REQUEST_CODE_UPDATE_MEMO = 1001;
 
-    private List<Memo> mMemoList;
+    private List<Group> mGroupList;
     private MemoRecyclerAdapter mAdapter;
     private RecyclerView mMemoListView;
 
     private Realm mRealm;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +57,9 @@ public class MemoActivity extends AppCompatActivity {
             set.addTransition(new ChangeImageTransform());
             getWindow().setExitTransition(set);
             getWindow().setEnterTransition(set);
+
         }
+
 //
 //        SearchView searchView = (SearchView) findViewById(R.id.search_view);
 //        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -68,7 +71,7 @@ public class MemoActivity extends AppCompatActivity {
 //            @Override
 //            public boolean onQueryTextChange(String newText) {
 //                // 새로운 쿼리의 결과 뿌리기
-//                List<Memo> newMemoList = mMemoFacade.getMemoList(
+//                List<Group> newMemoList = mMemoFacade.getMemoList(
 //                        MemoContract.MemoEntry.COLUMN_NAME_TITLE + " LIKE '%" + newText + "%'",
 //                        null,
 //                        null,
@@ -104,7 +107,7 @@ public class MemoActivity extends AppCompatActivity {
         // 램
         mRealm = Realm.getDefaultInstance();
 
-        RealmResults<Memo> results = mRealm.where(Memo.class).findAll();
+        RealmResults<Group> results = mRealm.where(Group.class).findAll();
 
         // 어댑터
         mAdapter = new MemoRecyclerAdapter(this, results);
@@ -175,13 +178,11 @@ public class MemoActivity extends AppCompatActivity {
 
     @Subscribe
     public void showCustomDialog(final Long id) {
-        View view = LayoutInflater.from(this).inflate(R.layout.dialog_login, null, false);
-        final EditText idEditText = (EditText) view.findViewById(R.id.id_edit);
-        final EditText passWordEditText = (EditText) view.findViewById(R.id.password_edit);
+        //View view = LayoutInflater.from(this).inflate(R.layout.dialog_login, null, false);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("확인");
-        builder.setMessage("정말 삭제하시겠습니까");
+        builder.setMessage("할 일을 삭제합니다");
         builder.setIcon(R.mipmap.ic_launcher);
         builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
             @Override
@@ -190,13 +191,61 @@ public class MemoActivity extends AppCompatActivity {
             }
         });
         builder.setNegativeButton("취소", null);
-        builder.setView(view);
+        //builder.setView(view);
         builder.show();
     }
 
     private void deleteMemo(long id) {
         mRealm.beginTransaction();
-        mRealm.where(Memo.class).equalTo("id", id).findFirst().deleteFromRealm();
+        mRealm.where(Group.class).equalTo("id", id).findFirst().deleteFromRealm();
         mRealm.commitTransaction();
+    }
+
+    // 새 그룹 추가 옵션 메뉴
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_group, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_group:
+                newGroup();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    //새 그룹 추가
+    private void newGroup() {
+        View view = LayoutInflater.from(this).inflate(R.layout.view_dialog_input, null, false);
+        final EditText groupEditText = (EditText) view.findViewById(R.id.text);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("확인");
+        builder.setMessage("새 그룹을 추가합니다");
+
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                final String title = groupEditText.getText().toString();
+                // 신규
+                mRealm.executeTransaction(new Realm.Transaction() {
+                    @Override
+                    public void execute(Realm realm) {
+                        Group group = mRealm.createObject(Group.class, Group.nextId(realm));
+                        group.setTitle(title);
+                    }
+                });
+            }
+        });
+        builder.setNegativeButton("취소", null);
+        builder.setView(view);
+        builder.show();
     }
 }
