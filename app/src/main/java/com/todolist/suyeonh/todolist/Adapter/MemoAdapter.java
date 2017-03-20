@@ -48,7 +48,7 @@ public class MemoAdapter extends BaseAdapter {
 
             //뷰를 새로 만들 때
             convertView = LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.item_memo, parent, false);
+                    .inflate(R.layout.item_group, parent, false);
 
             //레이아웃 들고 오기
             TextView titleTextView = (TextView) convertView.findViewById(R.id.title_text);

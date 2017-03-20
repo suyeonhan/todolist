@@ -21,7 +21,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
 
-import com.todolist.suyeonh.todolist.Adapter.MemoRecyclerAdapter;
+import com.todolist.suyeonh.todolist.Adapter.GroupRecyclerAdapter;
 import com.todolist.suyeonh.todolist.models.Group;
 
 import org.greenrobot.eventbus.EventBus;
@@ -39,7 +39,7 @@ public class MemoActivity extends AppCompatActivity {
     public static final int REQUEST_CODE_UPDATE_MEMO = 1001;
 
     private List<Group> mGroupList;
-    private MemoRecyclerAdapter mAdapter;
+    private GroupRecyclerAdapter mAdapter;
     private RecyclerView mMemoListView;
 
     private Realm mRealm;
@@ -110,7 +110,7 @@ public class MemoActivity extends AppCompatActivity {
         RealmResults<Group> results = mRealm.where(Group.class).findAll();
 
         // 어댑터
-        mAdapter = new MemoRecyclerAdapter(this, results);
+        mAdapter = new GroupRecyclerAdapter(this, results);
 
         mMemoListView.setAdapter(mAdapter);
 

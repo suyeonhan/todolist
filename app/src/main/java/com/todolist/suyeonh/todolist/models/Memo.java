@@ -8,4 +8,12 @@ import io.realm.RealmObject;
 
 public class Memo extends RealmObject {
     private String memo;
+
+    public String getMemo() {
+        return memo;
+    }
+
+    public void setMemo(String memo) {
+        this.memo = memo;
+    }
 }

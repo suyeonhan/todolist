@@ -4,23 +4,29 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.todolist.suyeonh.todolist.Adapter.MemoRecyclerAdapter;
 import com.todolist.suyeonh.todolist.Utils.MyUtils;
 import com.todolist.suyeonh.todolist.models.Group;
+import com.todolist.suyeonh.todolist.models.Memo;
 
 import io.realm.Realm;
 
 public class MemocreateActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private EditText mTitleEditText;
+    private EditText mMemoEditText;
     private ImageView mImageView;
 
     private String mImagePath;
@@ -29,6 +35,7 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
 
     private long mId = -1;
     private Group mGroup;
+    private RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +43,9 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
         setContentView(R.layout.activity_memo2);
 
         mImageView = (ImageView) findViewById(R.id.appbar_image);
-        mTitleEditText = (EditText) findViewById(R.id.title_edit);
+        mMemoEditText = (EditText) findViewById(R.id.title_edit);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyler_view);
+
         mRealm = Realm.getDefaultInstance();
 
         findViewById(R.id.toolbar_layout).setOnClickListener(this);
@@ -54,13 +63,40 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
 
                 mGroup = mRealm.where(Group.class).equalTo("id", mId).findFirst();
 
-                mTitleEditText.setText(mGroup.getTitle());
                 mImagePath = mGroup.getImagePath();
                 if (mImagePath != null) {
                     Glide.with(this).load(mImagePath).into(mImageView);
                 }
             }
         }
+
+        mMemoEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                        actionId == EditorInfo.IME_ACTION_DONE ||
+                        event.getAction() == KeyEvent.ACTION_DOWN &&
+                                event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                    if (!event.isShiftPressed()) {
+                        // the user is done typing.
+                        // 메모 저장
+                        mRealm.beginTransaction();
+                        Memo memo = mRealm.createObject(Memo.class);
+                        memo.setMemo(mMemoEditText.getText().toString());
+                        mGroup.getMemoList().add(memo);
+                        mMemoEditText.setText("");
+                        mRealm.commitTransaction();
+                        return true; // consume.
+                    }
+                }
+                return false; // pass on to other listeners.
+            }
+        });
+
+
+        MemoRecyclerAdapter adapter = new MemoRecyclerAdapter(mGroup.getMemoList());
+        mRecyclerView.setAdapter(adapter);
+
     }
 
     @Override
@@ -97,7 +133,7 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
                 @Override
                 public void execute(Realm realm) {
                     Group group = mRealm.createObject(Group.class, Group.nextId(realm));
-                    group.setTitle(mTitleEditText.getText().toString());
+                    group.setTitle(mMemoEditText.getText().toString());
                     group.setImagePath(mImagePath);
                     finish();
                 }
@@ -106,7 +142,7 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
             // 수정
             mRealm.beginTransaction();
             Group group = mRealm.where(Group.class).equalTo("id", mGroup.getId()).findFirst();
-            group.setTitle(mTitleEditText.getText().toString());
+            group.setTitle(mMemoEditText.getText().toString());
             group.setImagePath(mImagePath);
             mRealm.commitTransaction();
             finish();
