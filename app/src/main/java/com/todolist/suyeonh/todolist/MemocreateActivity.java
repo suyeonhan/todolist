@@ -118,6 +118,10 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
 
             // 라이브러리
             Glide.with(this).load(mImagePath).into(mImageView);
+
+            mRealm.beginTransaction();
+            mGroup.setImagePath(mImagePath);
+            mRealm.commitTransaction();
         }
     }
 
