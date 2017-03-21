@@ -12,6 +12,7 @@ import com.todolist.suyeonh.todolist.R;
 import com.todolist.suyeonh.todolist.models.Memo;
 
 import io.realm.OrderedRealmCollection;
+import io.realm.Realm;
 import io.realm.RealmRecyclerViewAdapter;
 
 /**
@@ -22,19 +23,37 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
 
     public MemoRecyclerAdapter(@Nullable OrderedRealmCollection<Memo> data) {
         super(data, true);
+        setHasStableIds(true);
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View convertView = LayoutInflater.from(parent.getContext())
+        View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_memo, parent, false);
-        return new ViewHolder(convertView);
+        return new ViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Memo memo = getItem(position);
+    public void onBindViewHolder(ViewHolder holder, final int position) {
+        final Memo memo = getItem(position);
         holder.memoTextView.setText(memo.getMemo());
+
+        holder.checkBox.setChecked(memo.isDone());
+        holder.checkBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                boolean isChecked = ((CheckBox) v).isChecked();
+                Realm realm = Realm.getDefaultInstance();
+                realm.beginTransaction();
+                if (isChecked) {
+                    memo.setDone(true);
+                } else {
+                    memo.setDone(false);
+                }
+                realm.commitTransaction();
+                realm.close();
+            }
+        });
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
@@ -43,6 +62,7 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
         CheckBox checkBox;
 
         public ViewHolder(View itemView) {
+
             super(itemView);
 
             // 레이아웃 들고 오기

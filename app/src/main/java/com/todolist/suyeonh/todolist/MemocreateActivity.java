@@ -7,9 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -97,56 +94,6 @@ public class MemocreateActivity extends AppCompatActivity implements View.OnClic
         MemoRecyclerAdapter adapter = new MemoRecyclerAdapter(mGroup.getMemoList());
         mRecyclerView.setAdapter(adapter);
 
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_memo, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
-        switch (item.getItemId()) {
-            case R.id.action_save:
-                save();
-                return true;
-            case R.id.action_cancel:
-                cancel();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    private void cancel() {
-        setResult(RESULT_CANCELED);
-        finish();
-    }
-
-    private void save() {
-        if (mGroup == null) {
-            // 신규
-            mRealm.executeTransaction(new Realm.Transaction() {
-                @Override
-                public void execute(Realm realm) {
-                    Group group = mRealm.createObject(Group.class, Group.nextId(realm));
-                    group.setTitle(mMemoEditText.getText().toString());
-                    group.setImagePath(mImagePath);
-                    finish();
-                }
-            });
-        } else {
-            // 수정
-            mRealm.beginTransaction();
-            Group group = mRealm.where(Group.class).equalTo("id", mGroup.getId()).findFirst();
-            group.setTitle(mMemoEditText.getText().toString());
-            group.setImagePath(mImagePath);
-            mRealm.commitTransaction();
-            finish();
-        }
     }
 
     public void onImageClick2(View view) {

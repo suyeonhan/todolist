@@ -181,9 +181,7 @@ public class MemoActivity extends AppCompatActivity {
         //View view = LayoutInflater.from(this).inflate(R.layout.dialog_login, null, false);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("확인");
-        builder.setMessage("할 일을 삭제합니다");
-        builder.setIcon(R.mipmap.ic_launcher);
+        builder.setMessage("그룹을 삭제합니다");
         builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -227,7 +225,6 @@ public class MemoActivity extends AppCompatActivity {
         final EditText groupEditText = (EditText) view.findViewById(R.id.text);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("확인");
         builder.setMessage("새 그룹을 추가합니다");
 
         builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
