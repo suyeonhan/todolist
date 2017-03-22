@@ -1,4 +1,4 @@
-package com.todolist.suyeonh.todolist.Adapter;
+package com.todolist.suyeonh.todolist.adapter;
 
 import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;

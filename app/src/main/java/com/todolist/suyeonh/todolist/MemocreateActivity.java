@@ -14,7 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.todolist.suyeonh.todolist.Adapter.MemoRecyclerAdapter;
+import com.todolist.suyeonh.todolist.adapter.MemoRecyclerAdapter;
 import com.todolist.suyeonh.todolist.Utils.MyUtils;
 import com.todolist.suyeonh.todolist.models.Group;
 import com.todolist.suyeonh.todolist.models.Memo;

@@ -1,4 +1,4 @@
-package com.todolist.suyeonh.todolist.Adapter;
+package com.todolist.suyeonh.todolist.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;

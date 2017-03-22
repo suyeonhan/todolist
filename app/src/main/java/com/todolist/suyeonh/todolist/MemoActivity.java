@@ -21,7 +21,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
 
-import com.todolist.suyeonh.todolist.Adapter.GroupRecyclerAdapter;
+import com.todolist.suyeonh.todolist.adapter.GroupRecyclerAdapter;
 import com.todolist.suyeonh.todolist.models.Group;
 
 import org.greenrobot.eventbus.EventBus;
