@@ -2,186 +2,129 @@ package com.todolist.suyeonh.todolist;
 
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Build;
+import android.net.Uri;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
-import android.transition.ChangeImageTransform;
-import android.transition.TransitionSet;
-import android.view.ContextMenu;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.view.KeyEvent;
 import android.view.View;
-import android.view.Window;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.TextView;
 
-import com.todolist.suyeonh.todolist.adapter.GroupRecyclerAdapter;
+import com.bumptech.glide.Glide;
+import com.todolist.suyeonh.todolist.Utils.MyUtils;
+import com.todolist.suyeonh.todolist.adapter.MemoRecyclerAdapter;
 import com.todolist.suyeonh.todolist.models.Group;
+import com.todolist.suyeonh.todolist.models.Memo;
 
-import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 
-import java.util.List;
-
 import io.realm.Realm;
-import io.realm.RealmResults;
 
-public class MemoActivity extends AppCompatActivity {
+public class MemoActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private static final String TAG = MemoActivity.class.getSimpleName();
-    public static final int REQUEST_CODE_NEW_MEMO = 1000;
-    public static final int REQUEST_CODE_UPDATE_MEMO = 1001;
+    private EditText mMemoEditText;
+    private ImageView mImageView;
+    private SearchView mSearchView;
 
-    private List<Group> mGroupList;
-    private GroupRecyclerAdapter mAdapter;
-    private RecyclerView mMemoListView;
+    private String mImagePath;
 
     private Realm mRealm;
 
+    private long mId = -1;
+    private Group mGroup;
+    private RecyclerView mRecyclerView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // 화면 전환 기능 켜기
-        getWindow().requestFeature(Window.FEATURE_CONTENT_TRANSITIONS);
-
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_memo);
+        setContentView(R.layout.activity_memo_create);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            TransitionSet set = new TransitionSet();
-            set.addTransition(new ChangeImageTransform());
-            getWindow().setExitTransition(set);
-            getWindow().setEnterTransition(set);
+        SearchView searchView = (SearchView) findViewById(R.id.search_view);
+        mImageView = (ImageView) findViewById(R.id.appbar_image);
+        mMemoEditText = (EditText) findViewById(R.id.title_edit);
+        mRecyclerView = (RecyclerView) findViewById(R.id.recyler_view);
 
-        }
+        mRealm = Realm.getDefaultInstance();
 
-//
-//        SearchView searchView = (SearchView) findViewById(R.id.search_view);
+        findViewById(R.id.toolbar_layout).setOnClickListener(this);
+
 //        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 //            @Override
 //            public boolean onQueryTextSubmit(String query) {
+//                // 서치뷰의 내용으로 검색을 수행할 때 호출 됨
 //                return false;
 //            }
 //
 //            @Override
 //            public boolean onQueryTextChange(String newText) {
-//                // 새로운 쿼리의 결과 뿌리기
-//                List<Group> newMemoList = mMemoFacade.getMemoList(
-//                        MemoContract.MemoEntry.COLUMN_NAME_TITLE + " LIKE '%" + newText + "%'",
-//                        null,
-//                        null,
-//                        null,
-//                        null
-//                );
-//                mAdapter.swap(newMemoList);
-//
-//                return true;
+//                // 서치뷰의 자가 변경될 때마다 호출 됨
+//                Log.d("MainActivity", "onQueryTextChange: " + newText);
+//                return false;
 //            }
 //        });
-
-        mMemoListView = (RecyclerView) findViewById(R.id.memo_list);
-
-        // 애니메이션 커스터마이징
-        RecyclerView.ItemAnimator animator = new DefaultItemAnimator();
-        animator.setChangeDuration(1000);
-        mMemoListView.setItemAnimator(animator);
-
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        // 타이틀 없애기
+        getSupportActionBar().setTitle("");
+
+        if (getIntent() != null) {
+            if (getIntent().hasExtra("id")) {
+                // 보여주기
+                mId = getIntent().getLongExtra("id", -1);
+
+                mGroup = mRealm.where(Group.class).equalTo("id", mId).findFirst();
+
+                mImagePath = mGroup.getImagePath();
+                if (mImagePath != null) {
+                    Glide.with(this).load(mImagePath).into(mImageView);
+                }
+            }
+        }
+
+        mMemoEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MemoActivity.this, MemocreateActivity.class);
-                startActivity(intent);
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_SEARCH ||
+                        actionId == EditorInfo.IME_ACTION_DONE ||
+                        event.getAction() == KeyEvent.ACTION_DOWN &&
+                                event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+                    if (!event.isShiftPressed()) {
+                        // the user is done typing.
+                        // 메모 저장
+                        mRealm.beginTransaction();
+                        Memo memo = mRealm.createObject(Memo.class);
+                        memo.setMemo(mMemoEditText.getText().toString());
+                        mGroup.getMemoList().add(memo);
+                        mMemoEditText.setText("");
+                        mRealm.commitTransaction();
+                        return true; // consume.
+                    }
+                }
+                return false; // pass on to other listeners.
             }
         });
 
-        // 램
-        mRealm = Realm.getDefaultInstance();
 
-        RealmResults<Group> results = mRealm.where(Group.class).findAll();
-
-        // 어댑터
-        mAdapter = new GroupRecyclerAdapter(this, results);
-
-        mMemoListView.setAdapter(mAdapter);
-
-        // ContextMenu
-        registerForContextMenu(mMemoListView);
+        MemoRecyclerAdapter adapter = new MemoRecyclerAdapter(this, mGroup.getMemoList());
+        mRecyclerView.setAdapter(adapter);
 
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mRealm.close();
-    }
-
-    @Override
-    public void onCreateContextMenu(ContextMenu menu, View v,
-                                    ContextMenu.ContextMenuInfo menuInfo) {
-        super.onCreateContextMenu(menu, v, menuInfo);
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.context_menu_memo, menu);
-    }
-
-//    @Override
-//    public boolean onContextItemSelected(MenuItem item) {
-//        final AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-//        switch (item.getItemId()) {
-//            case R.id.action_delete:
-//                // 삭제를 누르면 확인을 받고 싶다
-//                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//                builder.setTitle("확인");
-//                builder.setMessage("정말 삭제하시겠습니까");
-//                builder.setIcon(R.mipmap.ic_launcher);
-//                // 긍정 버튼
-//                builder.setPositiveButton("삭제", new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        deleteMemo(info.id);
-//                    }
-//                });
-//                // 부정 버튼
-//                builder.setNegativeButton("취소", null);
-//                builder.show();
-//
-//                return true;
-//            case R.id.action_custom_dialog:
-//                showCustomDialog();
-//                return true;
-//            default:
-//                return super.onContextItemSelected(item);
-//        }
-//    }
-
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        EventBus.getDefault().register(this);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        EventBus.getDefault().unregister(this);
-    }
+    // 삭제 팝업
 
     @Subscribe
     public void showCustomDialog(final Long id) {
-        //View view = LayoutInflater.from(this).inflate(R.layout.dialog_login, null, false);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("그룹을 삭제합니다");
+        builder.setMessage("메모를 삭제합니다");
         builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -193,56 +136,45 @@ public class MemoActivity extends AppCompatActivity {
         builder.show();
     }
 
+    // 메모 삭제
     private void deleteMemo(long id) {
         mRealm.beginTransaction();
-        mRealm.where(Group.class).equalTo("id", id).findFirst().deleteFromRealm();
+        mRealm.where(Memo.class).equalTo("id", id).findFirst().deleteFromRealm();
         mRealm.commitTransaction();
     }
 
-    // 새 그룹 추가 옵션 메뉴
+    public void onImageClick2(View view) {
+        // 그림 줘
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.menu_group, menu);
-        return true;
+        startActivityForResult(intent, 1000);
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_group:
-                newGroup();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1000 && resultCode == RESULT_OK && data != null) {
+            // 그림이 정상적으로 선택되었을 때
+
+            // 사진 경로
+            Uri uri = data.getData();
+
+            mImagePath = MyUtils.getRealPath(this, uri);
+
+            // 라이브러리
+            Glide.with(this).load(mImagePath).into(mImageView);
+
+            mRealm.beginTransaction();
+            mGroup.setImagePath(mImagePath);
+            mRealm.commitTransaction();
         }
     }
 
-    //새 그룹 추가
-    private void newGroup() {
-        View view = LayoutInflater.from(this).inflate(R.layout.view_dialog_input, null, false);
-        final EditText groupEditText = (EditText) view.findViewById(R.id.text);
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("새 그룹을 추가합니다");
-
-        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                final String title = groupEditText.getText().toString();
-                // 신규
-                mRealm.executeTransaction(new Realm.Transaction() {
-                    @Override
-                    public void execute(Realm realm) {
-                        Group group = mRealm.createObject(Group.class, Group.nextId(realm));
-                        group.setTitle(title);
-                    }
-                });
-            }
-        });
-        builder.setNegativeButton("취소", null);
-        builder.setView(view);
-        builder.show();
+    @Override
+    public void onClick(View v) {
+        onImageClick2(v);
     }
 }

@@ -29,7 +29,7 @@ public class Myadapter extends
 
         //아이템 레이아웃
         View v = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_card,parent,false);
+                .inflate(R.layout.item_group,parent,false);
 
         //뷰홀더 생성 후 리턴
         ViewHolder vh = new ViewHolder(v);
@@ -57,7 +57,7 @@ public class Myadapter extends
         public ViewHolder(View itemView) {
             super(itemView);
             textView = (TextView)
-                    itemView.findViewById(R.id.card_text);
+                    itemView.findViewById(R.id.title_text);
         }
     }
 }

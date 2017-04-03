@@ -1,26 +1,34 @@
 package com.todolist.suyeonh.todolist.adapter;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.PopupMenu;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.todolist.suyeonh.todolist.MemocreateActivity;
+import com.todolist.suyeonh.todolist.MemoActivity;
 import com.todolist.suyeonh.todolist.R;
 import com.todolist.suyeonh.todolist.models.Group;
 
 import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import io.realm.OrderedRealmCollection;
+import io.realm.Realm;
 import io.realm.RealmRecyclerViewAdapter;
 
 /**
@@ -30,11 +38,25 @@ import io.realm.RealmRecyclerViewAdapter;
 public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupRecyclerAdapter.ViewHolder> {
 
     private Context mContext;
+    private Button mOptionView;
+    private Realm mRealm;
+
 
     public GroupRecyclerAdapter(Context context, @Nullable OrderedRealmCollection<Group> data) {
         super(data, true);
         setHasStableIds(true);
         mContext = context;
+
+    }
+
+    public void delete(int adapterPosition) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        Group group = getItem(adapterPosition);
+        group.deleteFromRealm();
+        notifyItemRemoved(adapterPosition);
+        realm.commitTransaction();
+        realm.close();
     }
 
     // EventBus 용 이벤트
@@ -50,9 +72,69 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         // 뷰를 새로 만들 때
+
         View convertView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_group, parent, false);
+        mOptionView = (Button) convertView.findViewById(R.id.option_button);
         return new ViewHolder(convertView);
+    }
+
+
+    // 그룹 삭제 팝업
+    @Subscribe
+    public void GroupDeleteDialog(final Long id) {
+        //View view = LayoutInflater.from(this).inflate(R.layout.dialog_login, null, false);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+        builder.setMessage("그룹을 삭제합니다");
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                mRealm = Realm.getDefaultInstance();
+                mRealm.beginTransaction();
+
+                mRealm.where(Group.class).equalTo("id", id).findFirst().deleteFromRealm();
+
+                mRealm.commitTransaction();
+                mRealm.close();
+
+            }
+        });
+        builder.setNegativeButton("취소", null);
+        //builder.setView(view);
+        builder.show();
+    }
+
+    // 그룹명 변경 팝업
+    @Subscribe
+    public void GroupUpdateDialog(final Long id) {
+        View view = LayoutInflater.from(mContext).inflate(R.layout.view_dialog_input, null, false);
+        final EditText groupEditText = (EditText) view.findViewById(R.id.text);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+
+        builder.setMessage("그룹명을 변경합니다");
+        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+                final String title = groupEditText.getText().toString();
+
+                mRealm = Realm.getDefaultInstance();
+                mRealm.beginTransaction();
+
+                Group group = mRealm.where(Group.class).equalTo("id", id).findFirst();
+                group.setTitle(title);
+
+                mRealm.commitTransaction();
+                mRealm.close();
+            }
+        });
+        builder.setNegativeButton("취소", null);
+        builder.setView(view);
+        builder.show();
     }
 
     @Override
@@ -70,7 +152,7 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(mContext, MemocreateActivity.class);
+                Intent intent = new Intent(mContext, MemoActivity.class);
                 intent.putExtra("id", group.getId());
                 mContext.startActivity(intent);
 
@@ -79,6 +161,30 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
 //                        ActivityOptionsCompat.makeSceneTransitionAnimation(mContext,
 //                                Pair.create(holder.checkBox, "image")).toBundle());
 
+            }
+        });
+
+
+        mOptionView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                PopupMenu popup = new PopupMenu(mContext, v);
+
+                popup.inflate(R.menu.group_item);
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    public boolean onMenuItemClick(MenuItem item) {
+                        switch (item.getItemId()) {
+                            case R.id.update:
+                                GroupUpdateDialog(group.getId());
+                                break;
+                            case R.id.delete:
+                                GroupDeleteDialog(group.getId());
+                                break;
+                        }
+                        return true;
+                    }
+                });
+                popup.show();
             }
         });
 
@@ -94,8 +200,8 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
     public String getRealPathFromURI(Context context, Uri contentUri) {
         Cursor cursor = null;
         try {
-            String[] proj = { MediaStore.Images.Media.DATA };
-            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
+            String[] proj = {MediaStore.Images.Media.DATA};
+            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
             int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
             cursor.moveToFirst();
             return cursor.getString(column_index);
