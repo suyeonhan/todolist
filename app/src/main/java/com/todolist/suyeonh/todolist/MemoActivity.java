@@ -4,12 +4,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
@@ -25,12 +30,12 @@ import com.todolist.suyeonh.todolist.models.Memo;
 import org.greenrobot.eventbus.Subscribe;
 
 import io.realm.Realm;
+import io.realm.RealmResults;
 
 public class MemoActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText mMemoEditText;
     private ImageView mImageView;
-    private SearchView mSearchView;
 
     private String mImagePath;
 
@@ -39,13 +44,13 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     private long mId = -1;
     private Group mGroup;
     private RecyclerView mRecyclerView;
+    private MemoRecyclerAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_memo_create);
 
-        SearchView searchView = (SearchView) findViewById(R.id.search_view);
         mImageView = (ImageView) findViewById(R.id.appbar_image);
         mMemoEditText = (EditText) findViewById(R.id.title_edit);
         mRecyclerView = (RecyclerView) findViewById(R.id.recyler_view);
@@ -54,23 +59,11 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
 
         findViewById(R.id.toolbar_layout).setOnClickListener(this);
 
-//        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-//            @Override
-//            public boolean onQueryTextSubmit(String query) {
-//                // 서치뷰의 내용으로 검색을 수행할 때 호출 됨
-//                return false;
-//            }
-//
-//            @Override
-//            public boolean onQueryTextChange(String newText) {
-//                // 서치뷰의 자가 변경될 때마다 호출 됨
-//                Log.d("MainActivity", "onQueryTextChange: " + newText);
-//                return false;
-//            }
-//        });
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // 타이틀 없애기
         getSupportActionBar().setTitle("");
@@ -113,13 +106,36 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         });
 
 
-        MemoRecyclerAdapter adapter = new MemoRecyclerAdapter(this, mGroup.getMemoList());
-        mRecyclerView.setAdapter(adapter);
+        mAdapter = new MemoRecyclerAdapter(this, mGroup.getMemoList());
+        mRecyclerView.setAdapter(mAdapter);
 
+        //스와이프 삭제 구현
+        ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
+
+            @Override
+            public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                return makeFlag(ItemTouchHelper.ACTION_STATE_SWIPE, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
+            }
+
+            //리스트 형태에서 이동
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            //스와이프 끝났을때 처리
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                mAdapter.delete(viewHolder.getAdapterPosition());
+
+            }
+        });
+        helper.attachToRecyclerView(mRecyclerView);
+        mRecyclerView.addItemDecoration(helper);
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     // 삭제 팝업
-
     @Subscribe
     public void showCustomDialog(final Long id) {
 
@@ -152,6 +168,29 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_memo, menu);
+        MenuItem searchItem = menu.findItem(R.id.search_view);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                Log.d("MemoActivity", "onQueryTextChange: " + newText);
+                RealmResults<Memo> results = mGroup.getMemoList().where().contains("memo", newText).findAll();
+                mAdapter.updateData(results);
+                return true;
+            }
+        });
+        return true;
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -172,6 +211,15 @@ public class MemoActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        switch (item.getItemId()) {
+//            case android.R.id.home:
+//                NavUtils.navigateUpFromSameTask(this);
+//                return true;
+//        }
+//        return super.onOptionsItemSelected(item);
+//    }
 
     @Override
     public void onClick(View v) {

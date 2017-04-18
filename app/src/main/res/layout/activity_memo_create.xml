@@ -7,6 +7,12 @@
     android:fitsSystemWindows="true"
     tools:context="com.todolist.suyeonh.todolist.MemoActivity">
 
+    <co.moonmonkeylabs.realmsearchview.RealmSearchView
+        android:id="@+id/search_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:rsvHint="@+id/search_hint"/>
+
     <android.support.design.widget.AppBarLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
@@ -32,39 +38,39 @@
 
             <android.support.v7.widget.Toolbar
                 android:id="@+id/toolbar"
-                android:layout_width="match_parent"
+                android:layout_width="400dp"
                 android:layout_height="?attr/actionBarSize"
                 app:layout_collapseMode="pin"
                 app:popupTheme="@style/AppTheme.PopupOverlay">
 
-            <android.support.v7.widget.SearchView
-                android:id="@+id/search_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                <EditText
+                    android:id="@+id/title_edit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="할 일을 입력해 주세요"
+                    android:textColorHint="#969696"
+                    android:transitionName="title" />
+                <!--<android.support.v7.widget.SearchView-->
+                    <!--android:id="@+id/search_view"-->
+                    <!--android:layout_width="wrap_content"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:gravity="" />-->
+
 
             </android.support.v7.widget.Toolbar>
-
 
 
         </android.support.design.widget.CollapsingToolbarLayout>
     </android.support.design.widget.AppBarLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:orientation="horizontal">
+    <!--<LinearLayout-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="56dp"-->
+        <!--android:orientation="horizontal">-->
 
-        <EditText
-            android:id="@+id/title_edit"
-            android:layout_width="350dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="8dp"
-            android:hint="할 일을 입력해 주세요"
-            android:textColorHint="#969696"
-            android:transitionName="title" />
+        <!---->
 
-    </LinearLayout>
+    <!--</LinearLayout>-->
     <!-- 내용 시작 -->
     <!-- 내용 끝 -->
 

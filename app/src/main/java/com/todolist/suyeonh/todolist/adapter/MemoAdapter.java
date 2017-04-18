@@ -20,7 +20,7 @@ public class MemoAdapter extends BaseAdapter {
 
     public void swap(List<Group> newGroupList) {
         mData = newGroupList;
-        notifyDataSetChanged();
+        //notifyDataSetChanged();
     }
 
     @Override

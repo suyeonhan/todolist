@@ -113,6 +113,7 @@ public class GroupActivity extends AppCompatActivity {
         // ContextMenu
         registerForContextMenu(mMemoListView);
 
+        //스와이프 삭제 구현
         ItemTouchHelper helper = new ItemTouchHelper(new ItemTouchHelper.Callback() {
 
             @Override
@@ -120,6 +121,7 @@ public class GroupActivity extends AppCompatActivity {
                 return makeFlag(ItemTouchHelper.ACTION_STATE_SWIPE, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT);
             }
 
+            //리스트 형태에서 이동
             @Override
             public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                 return false;

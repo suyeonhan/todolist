@@ -35,8 +35,16 @@ import io.realm.RealmRecyclerViewAdapter;
 public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecyclerAdapter.ViewHolder> {
 
     private Context mContext;
-    private Realm mRealm;
     private TextView mMemoTextView;
+
+    public void delete(int adapterPosition) {
+        Realm realm = Realm.getDefaultInstance();
+        realm.beginTransaction();
+        Memo memo = getItem(adapterPosition);
+        memo.deleteFromRealm();
+        realm.commitTransaction();
+        realm.close();
+    }
 
     public MemoRecyclerAdapter(Context context, @Nullable OrderedRealmCollection<Memo> data) {
         super(data, true);
@@ -48,13 +56,14 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_memo, parent, false);
+
         mMemoTextView = (TextView) itemView.findViewById(R.id.memo_textview);
         return new ViewHolder(itemView);
     }
 
     // 그룹 삭제 팝업
     @Subscribe
-    public void MemoDeleteDialog(final Memo memo) {
+    public void MemoDeleteDialog(final int position) {
         //View view = LayoutInflater.from(this).inflate(R.layout.dialog_login, null, false);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
@@ -63,13 +72,13 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
-                mRealm = Realm.getDefaultInstance();
-                mRealm.beginTransaction();
+                Realm realm = Realm.getDefaultInstance();
+                realm.beginTransaction();
 
-                memo.deleteFromRealm();
+                getData().deleteFromRealm(position);
 
-                mRealm.commitTransaction();
-                mRealm.close();
+                realm.commitTransaction();
+                realm.close();
 
             }
         });
@@ -78,7 +87,7 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
         builder.show();
     }
 
-    // 그룹명 변경 팝업
+    // 메모 변경 팝업
     @Subscribe
     public void MemoUpdateDialog(final Memo memo) {
         View view = LayoutInflater.from(mContext).inflate(R.layout.view_dialog_input, null, false);
@@ -86,7 +95,7 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 
-        builder.setMessage("그룹명을 변경합니다");
+        builder.setMessage("메모를 변경합니다");
         builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
 
             @Override
@@ -94,13 +103,13 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
 
                 final String title = memoEditText.getText().toString();
 
-                mRealm = Realm.getDefaultInstance();
-                mRealm.beginTransaction();
+                Realm realm = Realm.getDefaultInstance();
+                realm.beginTransaction();
 
                 memo.setMemo(title);
 
-                mRealm.commitTransaction();
-                mRealm.close();
+                realm.commitTransaction();
+                realm.close();
             }
         });
         builder.setNegativeButton("취소", null);
@@ -119,7 +128,7 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
             public boolean onLongClick(View v) {
                 PopupMenu popup = new PopupMenu(mContext, v);
                 popup.setGravity(Gravity.RIGHT);
-                popup.inflate(R.menu.group_item);
+                popup.inflate(R.menu.memo_item);
 
                 popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
                     public boolean onMenuItemClick(MenuItem item) {
@@ -128,7 +137,7 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
                                 MemoUpdateDialog(memo);
                                 break;
                             case R.id.delete:
-                                MemoDeleteDialog(memo);
+                                MemoDeleteDialog(holder.getAdapterPosition());
                                 break;
                         }
                         return true;
@@ -192,10 +201,10 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
         TextView memoTextView;
         CheckBox checkBox;
 
+
         public ViewHolder(View itemView) {
 
             super(itemView);
-
             // 레이아웃 들고 오기
             TextView titleTextView = (TextView) itemView.findViewById(R.id.memo_textview);
             CheckBox imageView = (CheckBox) itemView.findViewById(R.id.checkBox);
@@ -203,7 +212,9 @@ public class MemoRecyclerAdapter extends RealmRecyclerViewAdapter<Memo, MemoRecy
             // 뷰 홀더에 넣는다
             this.memoTextView = titleTextView;
             this.checkBox = imageView;
+
         }
     }
-
 }
+
+

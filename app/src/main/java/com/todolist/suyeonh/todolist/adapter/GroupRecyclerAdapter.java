@@ -17,12 +17,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.todolist.suyeonh.todolist.MemoActivity;
 import com.todolist.suyeonh.todolist.R;
 import com.todolist.suyeonh.todolist.models.Group;
+import com.todolist.suyeonh.todolist.models.Memo;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -54,7 +56,6 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
         realm.beginTransaction();
         Group group = getItem(adapterPosition);
         group.deleteFromRealm();
-        notifyItemRemoved(adapterPosition);
         realm.commitTransaction();
         realm.close();
     }
@@ -77,33 +78,6 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
                 .inflate(R.layout.item_group, parent, false);
         mOptionView = (Button) convertView.findViewById(R.id.option_button);
         return new ViewHolder(convertView);
-    }
-
-
-    // 그룹 삭제 팝업
-    @Subscribe
-    public void GroupDeleteDialog(final Long id) {
-        //View view = LayoutInflater.from(this).inflate(R.layout.dialog_login, null, false);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-        builder.setMessage("그룹을 삭제합니다");
-        builder.setPositiveButton("확인", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-
-                mRealm = Realm.getDefaultInstance();
-                mRealm.beginTransaction();
-
-                mRealm.where(Group.class).equalTo("id", id).findFirst().deleteFromRealm();
-
-                mRealm.commitTransaction();
-                mRealm.close();
-
-            }
-        });
-        builder.setNegativeButton("취소", null);
-        //builder.setView(view);
-        builder.show();
     }
 
     // 그룹명 변경 팝업
@@ -177,9 +151,6 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
                             case R.id.update:
                                 GroupUpdateDialog(group.getId());
                                 break;
-                            case R.id.delete:
-                                GroupDeleteDialog(group.getId());
-                                break;
                         }
                         return true;
                     }
@@ -195,6 +166,20 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
                 return true;
             }
         });
+
+        int todoCount = group.getMemoList().size();
+        int completed = 0;
+
+        for (Memo memo : group.getMemoList()) {
+            if (memo.isDone()) {
+                completed++;
+            }
+        }
+
+        holder.progressBar.setMax(todoCount);
+        holder.progressBar.setProgress(completed);
+
+        holder.progressTextView.setText(completed + "/" + todoCount);
     }
 
     public String getRealPathFromURI(Context context, Uri contentUri) {
@@ -236,6 +221,8 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
 
         TextView titleTextView;
         ImageView imageView;
+        ProgressBar progressBar;
+        TextView progressTextView;
 
         public ViewHolder(View itemView) {
             super(itemView);
@@ -243,10 +230,15 @@ public class GroupRecyclerAdapter extends RealmRecyclerViewAdapter<Group, GroupR
             // 레이아웃 들고 오기
             TextView titleTextView = (TextView) itemView.findViewById(R.id.title_text);
             ImageView imageView = (ImageView) itemView.findViewById(R.id.image_view);
+            ProgressBar progressBar = (ProgressBar) itemView.findViewById(R.id.progressBar1);
+            TextView progressTextView = (TextView) itemView.findViewById(R.id.progresstext);
+
 
             // 뷰 홀더에 넣는다
             this.titleTextView = titleTextView;
             this.imageView = imageView;
+            this.progressBar = progressBar;
+            this.progressTextView = progressTextView;
         }
     }
 }
